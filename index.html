@@ -1,8 +1,20 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>2019 Food Picks</title>
-  </head>
+<head>
+  <title>2019 Food Picks</title>
+  <style type="text/css">
+  table {
+  	float: left;
+  	margin: 50px;
+  }
+  table, th, td {
+  	border: 1px solid black;
+  }
+  th, td {
+  	padding: 10px;
+  }
+  </style>
+</head>
 <body style="padding: 0px; margin: 0px; background-color: transparent;">
   <script src="functions.js" type="text/javascript"></script>
   <script src="js/wheel.js?v=2" type="text/javascript"></script>
@@ -44,20 +56,27 @@
 			onmouseout="wheelMouseUp(event);">
     </canvas>
   </div>
-
+  
+  <div id="historyDiv" style="display:none;">
+  	<table id="alloted"><thead><tr><th colspan="2">Allocated Items</th></tr><tr><th>Time</th><th>Item</th></tr></thead><tbody></tbody></table>
+  	<table id="remaining"><thead><tr><th colspan="2">Remaining Items</th><tr><th>Item</th><th>Count</th></tr></thead><tbody></tbody></table>
+  	<img src="images/return-button.png" id="returnButton" style="right: 100px; top: 0px; position: absolute; width: 50px; height: 50px;" title="Return" onclick="hideHistory();"/>
+  </div>
+  
   <div id="reset" style="right: 0px; top: 0px; position: absolute; z-index: 1000;">
-    <img src="images/reset-button.png" id="resetButton" onclick="reset();"/>
+    <img src="images/reset-button.png" id="resetButton" style="width: 50px; height: 50px;" onclick="reset();"/>
   </div>
   <div id="spin" style="right: 50px; top: 100px; position: absolute; z-index: 1000;">
     <img src="images/spin-button.png" id="spinButton" style="width: 100px; height: 100px;" onclick="spin();"/>
   </div>
   <div id="wheelbuttons" style="right: 0px; bottom: 0px; position: absolute; z-index: 1000;">
-    <img src="images/wd-audio-on.png" id="mutebutton" onclick="toggleMute(this);"/>
+    <img src="images/hist-icon.png" style="width: 50px; height: 50px;"  id="historyButton" onclick="showHistory();"/>
+    <img src="images/wd-audio-on.png" id="mutebutton" style="width: 50px; height: 50px;" onclick="toggleMute(this);"/>
   </div>
 
   <script type="application/javascript">
 		
-    var colors = ["#FFFF00", "#FFFFFF","#3333FF","#FFFFFF","#FF2222","#FFFFFF" ];
+    var colors = ["#FFFF00", "#00FF00","#3333FF","#FF00FF","#FF2222","#00FFFF" ];
     var restaurants_orig = [
 	  "Idli","Veg Noodles","Vellai Paniyaram","Kandharappam","Vadai","Sambhar","Red Chutney","Cocunut Chutney","Kurma","Kavuni Arisi",
 	  "Thenga Manga Pattani Sundal","Modhagam","Thirattupaal","Cut Fruits","Coffee","Tea"
@@ -67,6 +86,7 @@
     //var counts = localStorage.counts ? JSON.parse(localStorage.counts) : counts_orig.slice(0);
     var weights_orig = [10,6,6,6,8,9,4,4,1,1,4,4,1,4,1,1];
     var weights = localStorage.weights ? JSON.parse(localStorage.weights) : weights_orig.slice(0);
+    var hist = localStorage.history ? JSON.parse(localStorage.history) : [];
 	
     function setWeightedVariables() {
       numOptionsWeighted = restaurants.length;
@@ -115,33 +135,54 @@
     }
 	if (isMobile) {
 		canvasWidth = canv.width;
-		var mutebutton = document.getElementById('mutebutton');
-		toggleMute(mutebutton);
+		//var mutebutton = document.getElementById('mutebutton');
+		//toggleMute(mutebutton);
 	}
 	var minDimension = 500;
 	var maxWidth = 500;
 	var maxHeight = 500;
-	try {
-		//if (window.frameElement) {
-			//maxWidth = window.frameElement.offsetWidth;
-			//maxHeight = window.frameElement.offsetHeight;
-                        maxWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
-                        maxHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
-		//}
-		minDimension = Math.min(maxWidth, maxHeight);
-	} catch(err) {
+    var canvasWidth = minDimension;
+    var wheelRadius;
+    var outsideRadiu;
+    var textRadius;
+    var insideRadius;
+
+    initLayout();
+    
+    function initLayout() {
+    	try {
+          //if (window.frameElement) {
+		  //maxWidth = window.frameElement.offsetWidth;
+		  //maxHeight = window.frameElement.offsetHeight;
+          maxWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
+          maxHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
+		  //}
+		  minDimension = Math.min(maxWidth, maxHeight);
+	    } catch(err) {}
         
+	    canvasWidth = minDimension;
+        canv.width = canvasWidth;
+        canv.height = canvasWidth;
+        wheelSize = canvasWidth;
+        canvTop.width = canvasWidth;
+        canvTop.height = canvasWidth;
+        if (maxWidth > maxHeight) { // landscape
+          canv.style.top = "0px";
+          canvTop.style.top = "0px";
+          canv.style.left = "" + (maxWidth-canvasWidth)/2 + "px";
+          canvTop.style.left = "" + (maxWidth-canvasWidth)/2 + "px";
+        } else { //portrait
+          canv.style.left = "0px";
+          canvTop.style.left = "0px";
+          canv.style.top = "" + (maxHeight-canvasWidth)/2 + "px";
+          canvTop.style.top = "" + (maxHeight-canvasWidth)/2 + "px";
+        }
+
+        wheelRadius = wheelSize * 0.5;
+        outsideRadius = wheelRadius;
+        textRadius = wheelRadius * 0.9;
+        insideRadius = wheelRadius *0.1;
     }
-	
-  
-    var canvasWidth = minDimension; // adjust this to resize the wheel on screen
-    canv.width = canvasWidth;
-    canv.height = canvasWidth;
-    wheelSize = canvasWidth;
-    canvTop.width = canvasWidth;
-    canvTop.height = canvasWidth;
-    canv.style.left = "" + (maxWidth-canvasWidth)/2 + "px";
-    canvTop.style.left = "" + (maxWidth-canvasWidth)/2 + "px";
 		
     var context = canvTop.getContext('2d');
     
@@ -154,16 +195,12 @@
     imageObj.src = 'images/WD-Click-to-Spin.png';
     */
     
-    var wheelRadius = wheelSize * 0.5;
-    var outsideRadius = wheelRadius;
-    var textRadius = wheelRadius * 0.9;
-    var insideRadius = wheelRadius *0.1;
-    
     function reset() {
       if (confirm("Reset roulette wheel options to the original list ?")) {
         restaurants = restaurants_orig.slice(0);
         //counts = counts_orig.slice(0);
         weights = weights_orig.slice(0);
+        hist = [];
         saveState();
         location.reload();
       }
@@ -173,6 +210,7 @@
       localStorage.options = JSON.stringify(restaurants);
       //localStorage.counts = JSON.stringify(counts);
       localStorage.weights = JSON.stringify(weights);
+      localStorage.history = JSON.stringify(hist);
     }
 
     function wheelMouseDown(e) {
@@ -350,6 +388,8 @@ function rotateWheelPreset() {
 	var choice = getCurrentChoiceWithWeights();
 	var text = choice.text;
 	var index = choice.index;
+	var itemNumber = weights_orig[index] - weights[index] + 1;
+	hist.push({'time':(new Date()).toJSON(),'item':text+" "+itemNumber});
 	 
 	var canvasTop = document.getElementById("wheelcanvastop");
 	if (canvasTop.getContext) {
@@ -421,29 +461,82 @@ function rotateWheelPreset() {
   
   function positionSpinButton() {
 	var spinButton = document.getElementById("spin");
-	var maxHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
-	spinButton.style.top = "" + (maxHeight/2 - 50) + "px";
-  }
-  
-  function listener(event){
-	if (event.data == "spin") {
-	  spin();
+    maxWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    maxHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+	if (maxWidth > maxHeight) {
+		spinButton.style.top = "" + (maxHeight/2 - 50) + "px";
+		spinButton.style.right = "0px";
+		spinButton.style.left = null;
+		spinButton.style.bottom = null;
+	} else {
+		spinButton.style.bottom = "0px";
+		spinButton.style.left = "" + (maxWidth/2 - 50) + "px";
+		spinButton.style.top = null;
+		spinButton.style.right = null;
 	}
   }
+  
+  function resizeScreen() {
+	  positionSpinButton();
+	  initLayout();
+	  draw();
+  }
+  
+//  function listener(event){
+//	if (event.data == "spin") {
+//	  spin();
+//	}
+//  }
 
 	try {
 		if (window.addEventListener){
-			addEventListener("message", listener, false);
-			addEventListener("resize", positionSpinButton, false);
+//			addEventListener("message", listener, false);
+			addEventListener("resize", resizeScreen, false);
 		} else {
-			attachEvent("onmessage", listener);
-			attachEvent("resize", positionSpinButton);
+//			attachEvent("onmessage", listener);
+			attachEvent("resize", resizeScreen);
 			
 		}
 	} catch(err) {
         
 	}
+	
+    function showHistory() {
+    	var historyDiv = document.getElementById("historyDiv");
+    	historyDiv.style.display = "block";
+    	canv.style.display = "none";
+    	canvTop.style.display = "none";
+    	document.getElementById("spin").style.display = "none";
+    	document.getElementById("wheelbuttons").style.display = "none";
+    	
+    	var alloted = document.getElementById("alloted").getElementsByTagName('tbody')[0];
+    	var remaining = document.getElementById("remaining").getElementsByTagName('tbody')[0];
+    	alloted.innerHTML="";
+    	remaining.innerHTML="";
+    	for (i=0; i<hist.length; i++) {
+    		var row = alloted.insertRow(i);
+    		var cell1 = row.insertCell(0);
+    		var cell2 = row.insertCell(1);
+    		cell1.innerHTML = hist[i].time;
+    		cell2.innerHTML = hist[i].item;
+    	}
+    	for (i=0; i<restaurants.length; i++) {
+    		var row = remaining.insertRow(i);
+    		var cell1 = row.insertCell(0);
+    		var cell2 = row.insertCell(1);
+    		cell1.innerHTML = restaurants[i];
+    		cell2.innerHTML = weights[i];
+    	}
+    }
 
+    function hideHistory() {
+    	var historyDiv = document.getElementById("historyDiv");
+    	historyDiv.style.display = "none";
+    	canv.style.display = "block";
+    	canvTop.style.display = "block";
+    	document.getElementById("spin").style.display = "block";
+    	document.getElementById("wheelbuttons").style.display = "block";
+    }
 	
 	</script>
 </body>
