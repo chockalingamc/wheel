@@ -141,7 +141,7 @@ function addTouchEventListeners() {
 		e.preventDefault();
 		var touch = e.touches[0];
 		wheelMouseUp(touch);
-		spin();
+		//spin();
 	}, false);
 }
 
