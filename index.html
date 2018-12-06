@@ -13,6 +13,15 @@
   th, td {
   	padding: 10px;
   }
+  button#undo {
+  	float:right;
+    background-color: #4CAF50; /* Green */
+    border: 1px solid black;
+    color: white;
+    padding: 1px 20px;
+    margin-left: 20px;
+    font-size: 14px;  	
+  }
   </style>
 </head>
 <body style="padding: 0px; margin: 0px; background-color: transparent;">
@@ -58,9 +67,25 @@
   </div>
   
   <div id="historyDiv" style="display:none;">
-  	<table id="alloted"><thead><tr><th colspan="2">Allocated Items</th></tr><tr><th>Time</th><th>Item</th></tr></thead><tbody></tbody></table>
-  	<table id="remaining"><thead><tr><th colspan="2">Remaining Items</th><tr><th>Item</th><th>Count</th></tr></thead><tbody></tbody></table>
-  	<img src="images/return-button.png" id="returnButton" style="right: 100px; top: 0px; position: absolute; width: 50px; height: 50px;" title="Return" onclick="hideHistory();"/>
+  	<table>
+  	  <thead>
+  	    <tr><th colspan="3">Assigned Items</th></tr>
+  	    <tr><th>#</th><th>Time</th><th>Item</th></tr>
+  	  </thead>
+  	  <tbody id="assigned"></tbody>
+  	</table >
+  	<table>
+  	  <thead>
+  	    <tr><th colspan="2">Remaining Items</th></tr>
+  	    <tr><th>Item</th><th>Count</th></tr>
+  	  </thead>
+  	  <tbody id="remaining"></tbody>
+  	  <tfoot>
+  	    <tr><td><b>Total</b></td><th id="remainingCount"></th></tr>
+  	  </tfoot>
+  	</table>
+  	<img src="images/return-button.png" id="returnButton" 
+  	    style="right: 100px; top: 0px; position: absolute; width: 50px; height: 50px;" title="Return" onclick="hideHistory();"/>
   </div>
   
   <div id="reset" style="right: 0px; top: 0px; position: absolute; z-index: 1000;">
@@ -303,9 +328,6 @@
 
   }
   
-  
-  
-  
   function setChoiceFontSizes() {
   // get the font size of each choice
 	 var canvas = document.getElementById("wheelcanvas");
@@ -328,10 +350,6 @@
 				choiceTextSize.push("18");
 			}
 		}
-		
-		// backup fonts
-		font_backup = choiceTextSize.slice(0);		  		
-		
 	}
   }
   
@@ -377,11 +395,6 @@ function rotateWheelPreset() {
 	}
   }
  
-
-  // backup choices
-  var font_backup = [];
-
-  
   function stopRotateWheelImage() {
     clearTimeout(spinTimeout);
 	
@@ -389,7 +402,7 @@ function rotateWheelPreset() {
 	var text = choice.text;
 	var index = choice.index;
 	var itemNumber = weights_orig[index] - weights[index] + 1;
-	hist.push({'time':(new Date()).toJSON(),'item':text+" "+itemNumber});
+	hist.push({'time':(new Date()).toLocaleString(),'item':text+" "+itemNumber});
 	 
 	var canvasTop = document.getElementById("wheelcanvastop");
 	if (canvasTop.getContext) {
@@ -420,36 +433,35 @@ function rotateWheelPreset() {
 	// check if this is the last count in that item
 	if (weights[index] > 1) {
 		// if not, just decrease count
-		//counts[index] = counts[index] - 1;
-		weights[index] = weights[index] - 1;
+		//counts[index]--;
+		weights[index]--;
 	} else {
         // if last element, remove that option and its count
 	
-					if (restaurants.length > 1) {
-                        restaurants.splice(index, 1);
-                        //counts.splice(index, 1);
-                        choiceTextSize.splice(index,1);
-                        if (index < weights.length) {
-                            weights.splice(index,1);
-                        }
-                        numoptions = numoptions - 1;
-                        arc = Math.PI / (numoptions / 2);
-                    } else {
-                        restaurants = restaurants_orig.slice(0);
-                        //counts = counts_orig.slice(0);
-                        choiceTextSize = font_backup.slice(0);
-                        weights = weights_orig.slice(0);
-                        numoptions = restaurants.length;
-                        arc = Math.PI / (numoptions / 2);
-                    }
+		if (restaurants.length > 1) {
+            restaurants.splice(index, 1);
+            //counts.splice(index, 1);
+            choiceTextSize.splice(index,1);
+            if (index < weights.length) {
+                weights.splice(index,1);
+            }
+            numoptions = numoptions - 1;
+            arc = Math.PI / (numoptions / 2);
+        } else {
+            restaurants = restaurants_orig.slice(0);
+            //counts = counts_orig.slice(0);
+            weights = weights_orig.slice(0);
+            hist = [];
+            saveState();
+            location.reload();
+        }
 	}
-                    setWeightedVariables();
+    
+	setWeightedVariables();
                     
-                    wheelImage = new Image();
-                    drawRouletteWheel();
-                    setWheelImageSource();
-	
-	
+    wheelImage = new Image();
+    drawRouletteWheel();
+    setWheelImageSource();
 
 	saveState();
   }
@@ -477,8 +489,8 @@ function rotateWheelPreset() {
   }
   
   function resizeScreen() {
-	  positionSpinButton();
 	  initLayout();
+	  positionSpinButton();
 	  draw();
   }
   
@@ -509,24 +521,37 @@ function rotateWheelPreset() {
     	document.getElementById("spin").style.display = "none";
     	document.getElementById("wheelbuttons").style.display = "none";
     	
-    	var alloted = document.getElementById("alloted").getElementsByTagName('tbody')[0];
-    	var remaining = document.getElementById("remaining").getElementsByTagName('tbody')[0];
-    	alloted.innerHTML="";
-    	remaining.innerHTML="";
+    	var assigned = document.getElementById("assigned");
+    	assigned.innerHTML = "";
     	for (i=0; i<hist.length; i++) {
-    		var row = alloted.insertRow(i);
+    		var row = assigned.insertRow(i);
     		var cell1 = row.insertCell(0);
     		var cell2 = row.insertCell(1);
-    		cell1.innerHTML = hist[i].time;
-    		cell2.innerHTML = hist[i].item;
+    		var cell3 = row.insertCell(2);
+    		cell1.innerHTML = i+1;
+    		cell1.style = "text-align:center;";
+    		cell2.innerHTML = hist[i].time;
+    		var t = document.createTextNode(hist[i].item);
+    		var content = "<span style='padding:2px;vertical-align:middle;'>" + hist[i].item + "</span>";
+    		if (i == hist.length-1){
+    			content += "<button id='undo' title='Undo' onclick='undoLastAssignment()'>Undo</button>";
+    		}
+    		cell3.innerHTML = content;
     	}
+    	var remaining = document.getElementById("remaining");
+    	remaining.innerHTML = "";
+    	var total = 0;
     	for (i=0; i<restaurants.length; i++) {
     		var row = remaining.insertRow(i);
     		var cell1 = row.insertCell(0);
     		var cell2 = row.insertCell(1);
     		cell1.innerHTML = restaurants[i];
     		cell2.innerHTML = weights[i];
+    		cell2.style = "text-align:center;";
+    		total += weights[i];
     	}
+    	var remainingCount = document.getElementById("remainingCount");
+    	remainingCount.innerHTML = total;
     }
 
     function hideHistory() {
@@ -536,6 +561,28 @@ function rotateWheelPreset() {
     	canvTop.style.display = "block";
     	document.getElementById("spin").style.display = "block";
     	document.getElementById("wheelbuttons").style.display = "block";
+    }
+    
+    function undoLastAssignment() {
+      	var input = prompt("Password : ");
+      	if (input && input == "nsna") {
+	        var lastRow = hist.pop();
+	        var lastItem = lastRow.item.substring(0, lastRow.item.lastIndexOf(" "));
+	        var weightIndex = restaurants.indexOf(lastItem);
+	        if (weightIndex != -1) {
+				weights[weightIndex]++;
+	    	} else {
+	    		restaurants.push(lastItem);
+	    		weights.push(1);
+	    		numoptions++;
+	    		arc = Math.PI / (numoptions / 2);
+	    	}
+	    	setWeightedVariables();
+	    	wheelImage = new Image();
+	    	draw();
+	    	saveState();
+	    	showHistory();
+      }
     }
 	
 	</script>

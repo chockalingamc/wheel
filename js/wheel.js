@@ -209,7 +209,8 @@ function addTouchEventListeners() {
   var isFirstSpinCycle = false;
   var isOddNumberOfChoices = false;
   var lastChoiceBeepedFor = -1;
-function rotateWheelImage() {
+
+  function rotateWheelImage() {
     spinTime += 30;
     if (spinTime >= spinTimeTotal) {
         stopRotateWheelImage();
@@ -282,6 +283,7 @@ function playSoundIfNeededWithWeights() {
 	var choice = { text: text, index: index };
 	return choice;
   }
+  
   function getCurrentChoiceWithWeights() {
         var degrees = startAngle * 180 / Math.PI + 180; // left side, not top
         var arcd = arc * 180 / Math.PI;
