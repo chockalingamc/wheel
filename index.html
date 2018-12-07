@@ -22,6 +22,52 @@
     margin-left: 20px;
     font-size: 14px;  	
   }
+  #manualAssignModal {
+  	visibility: hidden;
+  	position: fixed;
+  	top: 0%;
+  	left: 0%;
+  	width: 100%;
+  	height: 100%;
+  	align-content: center;
+  	z-index: 2000;
+  	background-color: black;
+  	opacity: 0.7;
+  	filter: alpha(opacity=70);
+  }
+  #manualAssignWidget {
+  	text-align: center;
+    visibility: hidden;
+    position: fixed;
+  	top: 25%;
+    left: 50%;
+    width: 16em;
+    height: 8em;
+    margin-left: -8em;
+    margin-top: -4em;
+  	border: 2px solid black;
+  	background-color: white;
+  	z-index: 3000;
+  	opacity: 1;
+  	overflow: auto;
+  }
+  #manualAssignWidget div {
+  	display: inline-block;
+  	margin-bottom: 15px;
+  }
+  #manualAssignWidget button {
+  	border: 1px solid black;
+  	padding: 5px;
+  	margin: 0px 10px 0px 10px;
+  }
+  #manualAssignWidget .header {
+  	width: 100%; 
+  	background-color: silver; 
+  	text-align: center; 
+  	padding-top: 10px;
+  	padding-bottom: 10px;
+  	font-weight: bold;
+  }
   </style>
 </head>
 <body style="padding: 0px; margin: 0px; background-color: transparent;">
@@ -73,7 +119,11 @@
   	    <tr><th>#</th><th>Time</th><th>Item</th></tr>
   	  </thead>
   	  <tbody id="assigned"></tbody>
-  	</table >
+  	  <tfoot>
+  	    <tr><td colspan="3"><img src="images/plus-icon.png" style="float:right; width: 20px; height: 20px;" 
+  	      title="Assign" onclick="showManualAssignment();"/></td></tr>
+  	  </tfoot>
+  	</table>
   	<table>
   	  <thead>
   	    <tr><th colspan="2">Remaining Items</th></tr>
@@ -395,13 +445,13 @@ function rotateWheelPreset() {
 	}
   }
  
-  function stopRotateWheelImage() {
+  function stopRotateWheelImage(choiceOverride) {
     clearTimeout(spinTimeout);
 	
-	var choice = getCurrentChoiceWithWeights();
+	var choice = choiceOverride ? choiceOverride : getCurrentChoiceWithWeights();
 	var text = choice.text;
 	var index = choice.index;
-	var itemNumber = weights_orig[index] - weights[index] + 1;
+	var itemNumber = weights_orig[restaurants_orig.indexOf(text)] - weights[index] + 1;
 	hist.push({'time':(new Date()).toLocaleString(),'item':text+" "+itemNumber});
 	 
 	var canvasTop = document.getElementById("wheelcanvastop");
@@ -584,7 +634,57 @@ function rotateWheelPreset() {
 	    	showHistory();
       }
     }
+    
+    function showManualAssignment() {
+ 		var input = prompt("Password : ");
+		if (input && input == "nsna") {
+ 			var selectElement = document.getElementById("availableOptions");
+			selectElement.innerHTML = "";
+			for (i=0; i<restaurants.length; i++) {
+				var option = document.createElement("option");
+				option.text = restaurants[i];
+				selectElement.add(option);
+			}
+    		var modal = document.getElementById("manualAssignModal");
+    		modal.style.visibility = "visible";
+    		var widget = document.getElementById("manualAssignWidget");
+    		widget.style.visibility = "visible";
+		}
+    }
+
+	function hideManualAssignment() {
+    	var modal = document.getElementById("manualAssignModal");
+    	modal.style.visibility = "hidden";
+    	var widget = document.getElementById("manualAssignWidget");
+    	widget.style.visibility = "hidden";
+    }
+
+    function doManualAssignment() {
+		var selectElement = document.getElementById("availableOptions");
+		if (selectElement.value) {
+			var choice = {"text":selectElement.value, "index":selectElement.selectedIndex};
+			stopRotateWheelImage(choice);
+			showHistory();
+		}
+		hideManualAssignment();
+	}
+
+  </script>
 	
-	</script>
+  <div id="manualAssignModal">
+  </div>
+  <div id="manualAssignWidget">
+ 	<div class="header">
+   	  Select Item to Assign
+  	</div>
+  	<div>
+      <select id="availableOptions"></select>
+    </div>
+    <div>
+      <button onclick="doManualAssignment();">Assign</button>
+      <button onclick="hideManualAssignment();">Cancel</button>
+    </div>
+  </div>
+
 </body>
 </html>
