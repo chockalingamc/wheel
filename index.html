@@ -68,6 +68,36 @@
   	padding-bottom: 10px;
   	font-weight: bold;
   }
+  #leftTop {
+  	left: 0px; 
+  	top: 0px; 
+  	position: absolute; 
+  	z-index: 1000;
+  }
+  #leftBottom {
+  	left: 0px; 
+  	bottom: 0px; 
+  	position: absolute; 
+  	z-index: 1000; 
+  }
+  .box {
+  	border: 1px solid black;
+  }
+  #leftTop label, #leftBottom label {
+  	width: 100%;
+    display: inline-block; 
+    text-align: center;
+    font-weight: bold;
+    padding: 2px 0px 2px 0px;
+  }
+  #leftTop .header, #leftBottom .header {
+  	width: 100%; 
+  	background-color: silver; 
+  	text-align: center; 
+  	padding-top: 5px;
+  	padding-bottom: 5px;
+  	font-weight: bold;
+  }
   </style>
 </head>
 <body style="padding: 0px; margin: 0px; background-color: transparent;">
@@ -138,6 +168,14 @@
   	    style="right: 100px; top: 0px; position: absolute; width: 50px; height: 50px;" title="Return" onclick="hideHistory();"/>
   </div>
   
+  <div id="leftTop" class="box">
+  	 <div class="header">Assigned Items</div>
+  	 <label id="countAssigned"></label>
+  </div>
+  <div id="leftBottom" class="box">
+  	<div class="header">Remaining Items</div>
+	<label id="countRemaining"></label>
+  </div>
   <div id="reset" style="right: 0px; top: 0px; position: absolute; z-index: 1000;">
     <img src="images/reset-button.png" id="resetButton" style="width: 50px; height: 50px;" onclick="reset();"/>
   </div>
@@ -153,13 +191,16 @@
 		
     var colors = ["#FFFF00", "#00FF00","#3333FF","#FF00FF","#FF2222","#00FFFF" ];
     var restaurants_orig = [
-	  "Idli","Veg Noodles","Vellai Paniyaram","Kandharappam","Vadai","Sambhar","Red Chutney","Cocunut Chutney","Kurma","Kavuni Arisi",
-	  "Thenga Manga Pattani Sundal","Modhagam","Thirattupaal","Cut Fruits","Coffee","Tea"
+    	"Idli", "Veg Noodles", "Vellai Paniyaram", "Kandharappam", "Vadai", 
+    	"Sambhar", "Red Chutney", "Cocunut Chutney", "Kurma", "Kavuni Arisi", 
+    	"Thenga Manga Pattani Sundal", "Modhagam", "Thirattupal", "Cut Fruits", "Coffee", 
+    	"Tea"
     ];
     var restaurants = localStorage.options ? JSON.parse(localStorage.options) : restaurants_orig.slice(0);
     //var counts_orig = [10,6,6,6,8,9,4,4,1,1,4,4,1,4,1,1];
     //var counts = localStorage.counts ? JSON.parse(localStorage.counts) : counts_orig.slice(0);
-    var weights_orig = [10,6,6,6,8,9,4,4,1,1,4,4,1,4,1,1];
+    var weights_orig = [9, 8, 5, 5, 5, 7, 4, 2, 5, 4, 4, 4, 1, 2, 1, 2];
+    var totalWeights = 68; // sum of all weights above
     var weights = localStorage.weights ? JSON.parse(localStorage.weights) : weights_orig.slice(0);
     var hist = localStorage.history ? JSON.parse(localStorage.history) : [];
 	
@@ -514,12 +555,14 @@ function rotateWheelPreset() {
     setWheelImageSource();
 
 	saveState();
+	updateCountsDisplay();
   }
   
 
   addTouchEventListeners();
   positionSpinButton();
   draw();
+  updateCountsDisplay();
   
   function positionSpinButton() {
 	var spinButton = document.getElementById("spin");
@@ -568,8 +611,10 @@ function rotateWheelPreset() {
     	historyDiv.style.display = "block";
     	canv.style.display = "none";
     	canvTop.style.display = "none";
-    	document.getElementById("spin").style.display = "none";
-    	document.getElementById("wheelbuttons").style.display = "none";
+    	document.getElementById("spin").style.visibility = "hidden";
+    	document.getElementById("wheelbuttons").style.visibility = "hidden";
+    	document.getElementById("leftTop").style.visibility = "hidden";
+    	document.getElementById("leftBottom").style.visibility = "hidden";
     	
     	var assigned = document.getElementById("assigned");
     	assigned.innerHTML = "";
@@ -590,18 +635,16 @@ function rotateWheelPreset() {
     	}
     	var remaining = document.getElementById("remaining");
     	remaining.innerHTML = "";
-    	var total = 0;
     	for (i=0; i<restaurants.length; i++) {
     		var row = remaining.insertRow(i);
     		var cell1 = row.insertCell(0);
     		var cell2 = row.insertCell(1);
     		cell1.innerHTML = restaurants[i];
-    		cell2.innerHTML = weights[i];
+    		cell2.innerHTML = weights[i] + " of " + weights_orig[restaurants_orig.indexOf(restaurants[i])];
     		cell2.style = "text-align:center;";
-    		total += weights[i];
     	}
     	var remainingCount = document.getElementById("remainingCount");
-    	remainingCount.innerHTML = total;
+    	remainingCount.innerHTML = weights.reduce(sum) + " of " + totalWeights;
     }
 
     function hideHistory() {
@@ -609,8 +652,10 @@ function rotateWheelPreset() {
     	historyDiv.style.display = "none";
     	canv.style.display = "block";
     	canvTop.style.display = "block";
-    	document.getElementById("spin").style.display = "block";
-    	document.getElementById("wheelbuttons").style.display = "block";
+    	document.getElementById("spin").style.visibility = "visible";
+    	document.getElementById("wheelbuttons").style.visibility = "visible";
+    	document.getElementById("leftTop").style.visibility = "visible";
+    	document.getElementById("leftBottom").style.visibility = "visible";
     }
     
     function undoLastAssignment() {
@@ -668,6 +713,17 @@ function rotateWheelPreset() {
 		}
 		hideManualAssignment();
 	}
+    
+    function updateCountsDisplay() {
+    	var countAssigned = document.getElementById("countAssigned");
+    	var countRemaining = document.getElementById("countRemaining");
+    	countAssigned.innerHTML = hist.length + " / " + totalWeights;
+    	countRemaining.innerHTML = weights.reduce(sum) + " / " + totalWeights;
+    }
+    
+    function sum(a, b) {
+    	return a + b;
+    }
 
   </script>
 	
