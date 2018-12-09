@@ -312,7 +312,8 @@
     */
     
     function reset() {
-      if (confirm("Reset roulette wheel options to the original list ?")) {
+      var input = prompt("Password : ");
+      if (input && input == "nsna") {
         restaurants = restaurants_orig.slice(0);
         //counts = counts_orig.slice(0);
         weights = weights_orig.slice(0);
@@ -676,6 +677,7 @@ function rotateWheelPreset() {
 	    	wheelImage = new Image();
 	    	draw();
 	    	saveState();
+	    	updateCountsDisplay();
 	    	showHistory();
       }
     }
