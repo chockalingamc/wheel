@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>2019 Food Picks</title>
+  <link rel="stylesheet" type="text/css" href="css/styles.css">
   <style type="text/css">
   table {
   	float: left;
@@ -223,6 +224,13 @@
   </div>
   <div id="spin" style="right: 50px; top: 100px; position: absolute; z-index: 1000;">
     <img src="images/spin-button.png" id="spinButton" style="width: 100px; height: 100px;" onclick="spin();"/>
+  </div>
+  <div id="autosavebox" style="right: 0px; bottom: 60px; position: absolute; z-index: 1000;">
+  	<label style="vertical-align: middle; font-weight: bold;">Autosave</label>
+	<label class="switch">
+		<input type="checkbox" onclick="toggleAutoSave(this.checked);">
+  		<span class="slider round"></span>
+	</label>
   </div>
   <div id="wheelbuttons" style="right: 0px; bottom: 0px; position: absolute; z-index: 1000;">
     <img src="images/hist-icon.png" style="width: 50px; height: 50px;"  id="historyButton" onclick="showHistory();"/>
@@ -706,6 +714,7 @@ function rotateWheelPreset() {
     	canv.style.display = "none";
     	canvTop.style.display = "none";
     	document.getElementById("spin").style.visibility = "hidden";
+    	document.getElementById("autosavebox").style.visibility = "hidden";
     	document.getElementById("wheelbuttons").style.visibility = "hidden";
     	document.getElementById("fileInput").style.visibility = "hidden";
     	document.getElementById("leftTop").style.visibility = "hidden";
@@ -750,6 +759,7 @@ function rotateWheelPreset() {
     	canv.style.display = "block";
     	canvTop.style.display = "block";
     	document.getElementById("spin").style.visibility = "visible";
+    	document.getElementById("autosavebox").style.visibility = "visible";
     	document.getElementById("wheelbuttons").style.visibility = "visible";
     	document.getElementById("fileInput").style.visibility = "visible";
     	document.getElementById("leftTop").style.visibility = "visible";
@@ -870,6 +880,25 @@ function rotateWheelPreset() {
 			userList.appendChild(option);
 		}
 	}
+	
+	// autosave
+	var autoSaveTimer;
+	
+	function autoSave() {
+		var tstr = Date.now();
+		var filename = '2019-food-allocation.'+tstr+'.csv';
+		export_table_to_csv(null, filename);
+    	console.log("Data saved to " + filename);
+	}
+
+	function toggleAutoSave(state) {
+		if (state) {
+			autoSaveTimer = setInterval(autoSave, 300000); // Time in milliseconds
+		} else {
+			clearInterval(autoSaveTimer);
+		}
+	}
+	
   </script>
 	
   <div id="darkScreen">
