@@ -13,16 +13,19 @@
   th, td {
   	padding: 10px;
   }
-  button#undo {
-  	float:right;
-    background-color: #4CAF50; /* Green */
-    border: 1px solid black;
-    color: white;
-    padding: 1px 20px;
-    margin-left: 20px;
-    font-size: 14px;  	
+  .imgButton {
+    width: 20px; 
+    height: 20px;' 
   }
-  #manualAssignModal {
+  .fr {
+    margin-left: 20px; 
+    float: right;
+  }
+  .fl {
+    margin-right: 20px; 
+    float:left;
+  }
+  #darkScreen {
   	visibility: hidden;
   	position: fixed;
   	top: 0%;
@@ -41,10 +44,10 @@
     position: fixed;
   	top: 25%;
     left: 50%;
-    width: 16em;
-    height: 8em;
-    margin-left: -8em;
-    margin-top: -4em;
+    width: 30em;
+    height: 11em;
+    margin-left: -15em;
+    margin-top: -5.5em;
   	border: 2px solid black;
   	background-color: white;
   	z-index: 3000;
@@ -52,21 +55,43 @@
   	overflow: auto;
   }
   #manualAssignWidget div {
-  	display: inline-block;
   	margin-bottom: 15px;
   }
-  #manualAssignWidget button {
+  #manualAssignWidget button, #userIdWidget button {
   	border: 1px solid black;
   	padding: 5px;
   	margin: 0px 10px 0px 10px;
   }
-  #manualAssignWidget .header {
+  #manualAssignWidget .header, #userIdWidget .header {
   	width: 100%; 
   	background-color: silver; 
   	text-align: center; 
   	padding-top: 10px;
   	padding-bottom: 10px;
   	font-weight: bold;
+  }
+  #userIdWidget {
+  	text-align: center;
+    visibility: hidden;
+    position: fixed;
+  	top: 25%;
+    left: 50%;
+    width: 30em;
+    height: 10em;
+    margin-left: -15em;
+    margin-top: -5em;
+  	border: 2px solid black;
+  	background-color: white;
+  	z-index: 3000;
+  	opacity: 1;
+  	overflow: auto;
+  }
+  #manualAssignWidget input, #userIdWidget input {
+    height: 2em;
+    width: 75%;
+  }
+  #userIdWidget div {
+    margin-bottom: 15px;
   }
   #leftTop {
   	left: 0px; 
@@ -78,32 +103,41 @@
   	left: 0px; 
   	bottom: 0px; 
   	position: absolute; 
-  	z-index: 1000; 
+  	z-index: 1000;
   }
   .box {
   	border: 1px solid black;
+  	margin: 5px;
   }
   #leftTop label, #leftBottom label {
   	width: 100%;
     display: inline-block; 
     text-align: center;
     font-weight: bold;
-    padding: 2px 0px 2px 0px;
+    padding: 2px;
   }
-  #leftTop .header, #leftBottom .header {
-  	width: 100%; 
+  #leftTop .header, #leftBottom .header, #fileInput .header {
   	background-color: silver; 
   	text-align: center; 
-  	padding-top: 5px;
-  	padding-bottom: 5px;
+  	padding: 5px;
   	font-weight: bold;
   }
+  #fileInput {
+    left: 150px;
+    bottom: 0px; 
+    position: absolute; 
+    z-index: 1000;
+  }
+  #userListInput {
+    padding: 5px;
+  }
   </style>
-</head>
-<body style="padding: 0px; margin: 0px; background-color: transparent;">
+
   <script src="functions.js" type="text/javascript"></script>
   <script src="js/wheel.js?v=2" type="text/javascript"></script>
-  
+  <script src="js/export.js" type="text/javascript"></script>
+</head>
+<body style="padding: 0px; margin: 0px; background-color: transparent;">
   <audio id="wheelAudio" preload="auto">
     <source src="sounds/WheelDecideFX1_Soft_Short.ogg" type="audio/ogg">
     <source src="sounds/WheelDecideFX1_Soft_Short.mp3" type="audio/mpeg">
@@ -143,15 +177,19 @@
   </div>
   
   <div id="historyDiv" style="display:none;">
-  	<table>
+  	<table id="historyTable">
   	  <thead>
-  	    <tr><th colspan="3">Assigned Items</th></tr>
-  	    <tr><th>#</th><th>Time</th><th>Item</th></tr>
+  	    <tr><th colspan="4">Assigned Items</th></tr>
+  	    <tr><th>#</th><th>Time</th><th>Assignee</th><th>Item</th></tr>
   	  </thead>
   	  <tbody id="assigned"></tbody>
   	  <tfoot>
-  	    <tr><td colspan="3"><img src="images/plus-icon.png" style="float:right; width: 20px; height: 20px;" 
-  	      title="Assign" onclick="showManualAssignment();"/></td></tr>
+  	    <tr>
+  	      <td colspan="4">
+  	        <img class="imgButton fl" src="images/download-icon.png" title="Download List" onclick="export_table_to_csv(null, '2019-food-allocation.csv');"/> 
+  	        <img class="imgButton fr" src="images/plus-icon.png" title="Assign" onclick="showManualAssignment();"/>
+  	      </td>
+  	    </tr>
   	  </tfoot>
   	</table>
   	<table>
@@ -165,7 +203,7 @@
   	  </tfoot>
   	</table>
   	<img src="images/return-button.png" id="returnButton" 
-  	    style="right: 100px; top: 0px; position: absolute; width: 50px; height: 50px;" title="Return" onclick="hideHistory();"/>
+  	    style="right: 100px; top: 0px; position:fixed; width: 50px; height: 50px;" title="Return" onclick="hideHistory();"/>
   </div>
   
   <div id="leftTop" class="box">
@@ -175,6 +213,10 @@
   <div id="leftBottom" class="box">
   	<div class="header">Remaining Items</div>
 	<label id="countRemaining"></label>
+  </div>
+  <div id="fileInput" class="box">
+    <div class="header">User Name List</div>
+    <input type="file" id="userListInput" name="file1" accept="text/plain" onclick="this.value='';" onchange="loadUserDataList();">
   </div>
   <div id="reset" style="right: 0px; top: 0px; position: absolute; z-index: 1000;">
     <img src="images/reset-button.png" id="resetButton" style="width: 50px; height: 50px;" onclick="reset();"/>
@@ -191,18 +233,63 @@
 		
     var colors = ["#FFFF00", "#00FF00","#3333FF","#FF00FF","#FF2222","#00FFFF" ];
     var restaurants_orig = [
-    	"Idli", "Veg Noodles", "Vellai Paniyaram", "Kandharappam", "Vadai", 
-    	"Sambhar", "Red Chutney", "Cocunut Chutney", "Kurma", "Kavuni Arisi", 
-    	"Thenga Manga Pattani Sundal", "Modhagam", "Thirattupal", "Cut Fruits", "Coffee", 
-    	"Tea"
+    	"Appetizer",
+    	"Coconut Chutney",
+    	"Kandarappam",
+    	"Coffee",
+    	"Idli",
+    	"Cut Fruits",
+    	"Noodles",
+    	"Thiratupaal",
+    	"Vadai",
+    	"Red Chutney",
+    	"Sambar",
+    	"Tea",
+    	"Vellai Paniyaram",
+    	"Kavuniarisi",
+    	"Kurma"
     ];
     var restaurants = localStorage.options ? JSON.parse(localStorage.options) : restaurants_orig.slice(0);
     //var counts_orig = [10,6,6,6,8,9,4,4,1,1,4,4,1,4,1,1];
     //var counts = localStorage.counts ? JSON.parse(localStorage.counts) : counts_orig.slice(0);
-    var weights_orig = [9, 8, 5, 5, 5, 7, 4, 2, 5, 4, 4, 4, 1, 2, 1, 2];
-    var totalWeights = 68; // sum of all weights above
+    var weights_orig = [11, 2, 9, 1, 10, 2, 9, 1, 9, 5, 8, 2, 9, 4, 6];
+    var totalWeights = weights_orig.reduce(sum); // sum of all weights above
     var weights = localStorage.weights ? JSON.parse(localStorage.weights) : weights_orig.slice(0);
     var hist = localStorage.history ? JSON.parse(localStorage.history) : [];
+	var assignee;
+
+    function clearFileInput() {
+    	this.value = "";
+    }
+	function loadUserDataList() {
+      var files = document.getElementById("userListInput").files;
+      if (files.length === 0) {
+    	  return;
+      }
+      var file = files[0];
+      if (!file.type.match('text.*')) {
+    	return;
+      }
+
+      var userDataList = document.getElementById("userList");
+      userDataList.innerHTML = "";
+      
+      var reader = new FileReader();
+      reader.onload = function(e) {
+    	if (e.target.readyState == FileReader.DONE) { // DONE == 2
+          var fileContent = e.target.result;
+    	  var rows = fileContent.split("\r\n");
+          for (i=0; i<rows.length; i++) {
+        	if (rows[i]) {
+    	      var option = document.createElement("option");
+              option.value = rows[i];
+    		  userDataList.appendChild(option);
+        	}
+    	  }
+        }
+      };
+      reader.readAsText(file);
+	}
 	
     function setWeightedVariables() {
       numOptionsWeighted = restaurants.length;
@@ -313,7 +400,7 @@
     
     function reset() {
       var input = prompt("Password : ");
-      if (input && input == "nsna") {
+      if (input && input == "nsnareset") {
         restaurants = restaurants_orig.slice(0);
         //counts = counts_orig.slice(0);
         weights = weights_orig.slice(0);
@@ -386,18 +473,22 @@
             text = text.substring(0,27) + "...";	
           }
           
-          ctx.fillText(text, 0, 0);
+          ctx.fillText(text, -10, -10);
           ctx.restore();
           weightedIndex += weight;
         }
         drawArrow();
       }
     }
-    
+  
   function spin() {
+    if (!assignee) {
+    	getUserId();
+    	return;
+    }
     clearTopCanvas();
 	drawArrow();
-    var minTimeToSpin = 3;
+    var minTimeToSpin = 6;
     var timeRange = 4;
 	 var minAngleToStartRotating = 20;
 	 var angleRange = 30;
@@ -494,7 +585,8 @@ function rotateWheelPreset() {
 	var text = choice.text;
 	var index = choice.index;
 	var itemNumber = weights_orig[restaurants_orig.indexOf(text)] - weights[index] + 1;
-	hist.push({'time':(new Date()).toLocaleString(),'item':text+" "+itemNumber});
+	hist.push({'time':(new Date()).toLocaleString(),'item':text+" "+itemNumber, 'assignee':assignee});
+	removeFromUserList(assignee);
 	 
 	var canvasTop = document.getElementById("wheelcanvastop");
 	if (canvasTop.getContext) {
@@ -557,6 +649,7 @@ function rotateWheelPreset() {
 
 	saveState();
 	updateCountsDisplay();
+	assignee = null;
   }
   
 
@@ -614,6 +707,7 @@ function rotateWheelPreset() {
     	canvTop.style.display = "none";
     	document.getElementById("spin").style.visibility = "hidden";
     	document.getElementById("wheelbuttons").style.visibility = "hidden";
+    	document.getElementById("fileInput").style.visibility = "hidden";
     	document.getElementById("leftTop").style.visibility = "hidden";
     	document.getElementById("leftBottom").style.visibility = "hidden";
     	
@@ -624,15 +718,17 @@ function rotateWheelPreset() {
     		var cell1 = row.insertCell(0);
     		var cell2 = row.insertCell(1);
     		var cell3 = row.insertCell(2);
+    		var cell4 = row.insertCell(3);
     		cell1.innerHTML = i+1;
     		cell1.style = "text-align:center;";
     		cell2.innerHTML = hist[i].time;
+    		cell3.innerHTML = hist[i].assignee;
     		var t = document.createTextNode(hist[i].item);
     		var content = "<span style='padding:2px;vertical-align:middle;'>" + hist[i].item + "</span>";
     		if (i == hist.length-1){
-    			content += "<button id='undo' title='Undo' onclick='undoLastAssignment()'>Undo</button>";
+    			content += "<img class='imgButton fr' src='images/minus-icon.png' title='Undo' onclick='undoLastAssignment()'/>";
     		}
-    		cell3.innerHTML = content;
+    		cell4.innerHTML = content;
     	}
     	var remaining = document.getElementById("remaining");
     	remaining.innerHTML = "";
@@ -655,6 +751,7 @@ function rotateWheelPreset() {
     	canvTop.style.display = "block";
     	document.getElementById("spin").style.visibility = "visible";
     	document.getElementById("wheelbuttons").style.visibility = "visible";
+    	document.getElementById("fileInput").style.visibility = "visible";
     	document.getElementById("leftTop").style.visibility = "visible";
     	document.getElementById("leftBottom").style.visibility = "visible";
     }
@@ -663,6 +760,7 @@ function rotateWheelPreset() {
       	var input = prompt("Password : ");
       	if (input && input == "nsna") {
 	        var lastRow = hist.pop();
+	        addToUserList(lastRow.assignee);
 	        var lastItem = lastRow.item.substring(0, lastRow.item.lastIndexOf(" "));
 	        var weightIndex = restaurants.indexOf(lastItem);
 	        if (weightIndex != -1) {
@@ -692,7 +790,7 @@ function rotateWheelPreset() {
 				option.text = restaurants[i];
 				selectElement.add(option);
 			}
-    		var modal = document.getElementById("manualAssignModal");
+    		var modal = document.getElementById("darkScreen");
     		modal.style.visibility = "visible";
     		var widget = document.getElementById("manualAssignWidget");
     		widget.style.visibility = "visible";
@@ -700,7 +798,7 @@ function rotateWheelPreset() {
     }
 
 	function hideManualAssignment() {
-    	var modal = document.getElementById("manualAssignModal");
+    	var modal = document.getElementById("darkScreen");
     	modal.style.visibility = "hidden";
     	var widget = document.getElementById("manualAssignWidget");
     	widget.style.visibility = "hidden";
@@ -708,7 +806,9 @@ function rotateWheelPreset() {
 
     function doManualAssignment() {
 		var selectElement = document.getElementById("availableOptions");
+		var userIdManual = document.getElementById("userIdManual");
 		if (selectElement.value) {
+			assignee = userIdManual.value;
 			var choice = {"text":selectElement.value, "index":selectElement.selectedIndex};
 			stopRotateWheelImage(choice);
 			showHistory();
@@ -727,20 +827,80 @@ function rotateWheelPreset() {
     	return a + b;
     }
 
+    function getUserId() {
+      var userId = document.getElementById("userId");
+      userId.value = "";
+      var modal = document.getElementById("darkScreen");
+      modal.style.visibility = "visible";
+      var widget = document.getElementById("userIdWidget");
+      widget.style.visibility = "visible";
+    }
+     
+    function setUserId() {
+   	  var userId = document.getElementById("userId");
+   	  hideUserIdWidget();
+   	  if (userId.value) {
+        assignee = userId.value;
+        spin();
+   	  }
+    }
+      
+	function hideUserIdWidget() {
+    	var modal = document.getElementById("darkScreen");
+    	modal.style.visibility = "hidden";
+    	var widget = document.getElementById("userIdWidget");
+    	widget.style.visibility = "hidden";
+    }
+	
+	function removeFromUserList(assignee) {
+		var userList = document.getElementById("userList");
+		var options = userList.children;
+		for (i=0; i<options.length; i++) {
+			if (options[i].value == assignee) {
+				options[i].remove();
+			}
+		}
+	}
+	
+	function addToUserList(assignee) {
+		if (assignee && assignee != 'undefined') {
+			var userList = document.getElementById("userList");
+			var option = document.createElement("option");
+			option.value = assignee;
+			userList.appendChild(option);
+		}
+	}
   </script>
 	
-  <div id="manualAssignModal">
+  <div id="darkScreen">
   </div>
   <div id="manualAssignWidget">
  	<div class="header">
-   	  Select Item to Assign
+   	  Select User and Item to Assign
   	</div>
+  	<div>
+      <input type="text" id="userIdManual" list="userList">
+    </div>
   	<div>
       <select id="availableOptions"></select>
     </div>
     <div>
       <button onclick="doManualAssignment();">Assign</button>
       <button onclick="hideManualAssignment();">Cancel</button>
+    </div>
+  </div>
+  
+  <div id="userIdWidget">
+ 	<div class="header">
+   	  Enter Full Name or DC Achis registered email
+  	</div>
+  	<div>
+      <input type="text" id="userId" list="userList">
+      <datalist id="userList"></datalist>
+    </div>
+    <div>
+      <button onclick="setUserId();">Start Spinning</button>
+      <button onclick="hideUserIdWidget();">Cancel</button>
     </div>
   </div>
 
