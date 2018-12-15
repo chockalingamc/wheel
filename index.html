@@ -264,6 +264,10 @@
     var totalWeights = weights_orig.reduce(sum); // sum of all weights above
     var weights = localStorage.weights ? JSON.parse(localStorage.weights) : weights_orig.slice(0);
     var hist = localStorage.history ? JSON.parse(localStorage.history) : [];
+    var assignee_list = [];
+    for (i=0; i<hist.length; i++) {
+    	assignee_list.push(hist[i].assignee);
+    }
 	var assignee;
 
     function clearFileInput() {
@@ -279,8 +283,8 @@
     	return;
       }
 
-      var userDataList = document.getElementById("userList");
-      userDataList.innerHTML = "";
+      var userList = document.getElementById("userList");
+      userList.innerHTML = "";
       
       var reader = new FileReader();
       reader.onload = function(e) {
@@ -288,10 +292,10 @@
           var fileContent = e.target.result;
     	  var rows = fileContent.split("\r\n");
           for (i=0; i<rows.length; i++) {
-        	if (rows[i]) {
+        	if (rows[i] && assignee_list.indexOf(rows[i])==-1) {
     	      var option = document.createElement("option");
               option.value = rows[i];
-    		  userDataList.appendChild(option);
+              userList.appendChild(option);
         	}
     	  }
         }
@@ -594,6 +598,7 @@ function rotateWheelPreset() {
 	var index = choice.index;
 	var itemNumber = weights_orig[restaurants_orig.indexOf(text)] - weights[index] + 1;
 	hist.push({'time':(new Date()).toLocaleString(),'item':text+" "+itemNumber, 'assignee':assignee});
+	assignee_list.push(assignee);
 	removeFromUserList(assignee);
 	 
 	var canvasTop = document.getElementById("wheelcanvastop");
@@ -770,6 +775,7 @@ function rotateWheelPreset() {
       	var input = prompt("Password : ");
       	if (input && input == "nsna") {
 	        var lastRow = hist.pop();
+	        assignee_list.pop();
 	        addToUserList(lastRow.assignee);
 	        var lastItem = lastRow.item.substring(0, lastRow.item.lastIndexOf(" "));
 	        var weightIndex = restaurants.indexOf(lastItem);
@@ -893,6 +899,7 @@ function rotateWheelPreset() {
 
 	function toggleAutoSave(state) {
 		if (state) {
+			autoSave();
 			autoSaveTimer = setInterval(autoSave, 300000); // Time in milliseconds
 		} else {
 			clearInterval(autoSaveTimer);
