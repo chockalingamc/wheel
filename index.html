@@ -220,7 +220,7 @@
     <div class="header">User Name List</div>
     <input type="file" id="userListInput" name="file1" accept="text/plain" onclick="this.value='';" onchange="loadUserDataList();">
   </div>
-  <div id="reset" style="right: 100px; top: 0px; position: fixed; z-index: 1000; visibility: hidden;">
+  <div id="reset" style="right: 0px; bottom: 0px; position: fixed; z-index: 1000; visibility: hidden;">
     <img src="images/reset-button.png" id="resetButton" style="width: 50px; height: 50px;" onclick="reset();"/>
   </div>
   <div id="spin" style="right: 50px; top: 100px; position: absolute; z-index: 1000;">
@@ -293,7 +293,7 @@
       reader.onload = function(e) {
     	if (e.target.readyState == FileReader.DONE) { // DONE == 2
           var fileContent = e.target.result;
-    	  var rows = fileContent.split("\r\n");
+          var rows = fileContent.split(/\r\n|\n/);
           for (i=0; i<rows.length; i++) {
         	if (rows[i] && assignee_list.indexOf(rows[i])==-1) {
     	      var option = document.createElement("option");
@@ -830,13 +830,16 @@ function rotateWheelPreset() {
     function doManualAssignment() {
 		var selectElement = document.getElementById("availableOptions");
 		var userIdManual = document.getElementById("userIdManual");
-		if (selectElement.value) {
-			assignee = userIdManual.value;
+		if (userIdManual.value && userIdManual.value.trim() && selectElement.value) {
+			hideManualAssignment();
+			assignee = userIdManual.value.trim();
 			var choice = {"text":selectElement.value, "index":selectElement.selectedIndex};
 			stopRotateWheelImage(choice);
 			showHistory();
+		} else {
+			alert("Please select both user and item to assign");
+			userIdManual.focus();
 		}
-		hideManualAssignment();
 	}
     
     function updateCountsDisplay() {
@@ -861,10 +864,13 @@ function rotateWheelPreset() {
      
     function setUserId() {
    	  var userId = document.getElementById("userId");
-   	  hideUserIdWidget();
-   	  if (userId.value) {
-        assignee = userId.value;
+   	  if (userId.value && userId.value.trim()) {
+		hideUserIdWidget();
+   		assignee = userId.value.trim();
         spin();
+   	  } else {
+   	  	alert("Please enter a username with email");
+   	  	userId.focus();
    	  }
     }
       
